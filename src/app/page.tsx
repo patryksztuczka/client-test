@@ -33,6 +33,15 @@ export default function HomePage() {
           fetch("http://localhost:3000/version"),
         ]);
 
+        if (!fruitsRes.ok || !vegetablesRes.ok || !versionRes.ok) {
+          const errorResponse = !vegetablesRes.ok
+            ? await vegetablesRes.json()
+            : null;
+          throw new Error(
+            errorResponse?.message || "One or more requests failed",
+          );
+        }
+
         const fruitsData = await fruitsRes.json();
         const vegetablesData = await vegetablesRes.json();
         const versionData: Version = await versionRes.json();
@@ -41,7 +50,12 @@ export default function HomePage() {
         setVegetables(vegetablesData);
         setVersion(versionData.version);
       } catch (err) {
-        setError("Failed to fetch data from the server");
+        setVegetables([]); // Clear vegetables on error
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch data from the server",
+        );
         console.error("Error fetching data:", err);
       }
     };

@@ -33,29 +33,44 @@ export default function HomePage() {
           fetch("http://localhost:3000/version"),
         ]);
 
-        if (!fruitsRes.ok || !vegetablesRes.ok || !versionRes.ok) {
-          const errorResponse = !vegetablesRes.ok
-            ? await vegetablesRes.json()
-            : null;
-          throw new Error(
-            errorResponse?.message || "One or more requests failed",
-          );
+        // Handle each response separately
+        try {
+          if (fruitsRes.ok) {
+            const fruitsData = await fruitsRes.json();
+            setFruits(fruitsData);
+          } else {
+            setFruits([]);
+          }
+        } catch (e) {
+          setFruits([]);
         }
 
-        const fruitsData = await fruitsRes.json();
-        const vegetablesData = await vegetablesRes.json();
-        const versionData: Version = await versionRes.json();
+        try {
+          if (vegetablesRes.ok) {
+            const vegetablesData = await vegetablesRes.json();
+            setVegetables(vegetablesData);
+          } else {
+            const errorResponse = await vegetablesRes.json();
+            setVegetables([]);
+            setError(errorResponse?.message || "Failed to fetch vegetables");
+          }
+        } catch (e) {
+          setVegetables([]);
+          setError("Failed to fetch vegetables data");
+        }
 
-        setFruits(fruitsData);
-        setVegetables(vegetablesData);
-        setVersion(versionData.version);
+        try {
+          if (versionRes.ok) {
+            const versionData: Version = await versionRes.json();
+            setVersion(versionData.version);
+          } else {
+            setVersion("");
+          }
+        } catch (e) {
+          setVersion("");
+        }
       } catch (err) {
-        setVegetables([]); // Clear vegetables on error
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch data from the server",
-        );
+        setError("Failed to fetch data from the server");
         console.error("Error fetching data:", err);
       }
     };
